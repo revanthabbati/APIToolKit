@@ -2,7 +2,7 @@
 
 A browser-based tool for firing an API request on repeat and capturing every response. Configure a URL, method, headers, query params, and body, set a delay between runs, hit **Start**, and watch results come in live.
 
-**Live app:** `https://<your-github-username>.github.io/APIToolKit/` (once GitHub Pages is enabled — see [Deploying](#deploying))
+**Live app:** [revanthabbati.github.io/APIToolKit](https://revanthabbati.github.io/APIToolKit/) (once GitHub Pages is enabled — see [Deploying](#deploying))
 
 ## Features
 
