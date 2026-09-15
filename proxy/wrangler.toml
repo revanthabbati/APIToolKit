@@ -1,3 +1,3 @@
-name = "apitoolkit-proxy"
+name = "apitoolkit"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
