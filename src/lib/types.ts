@@ -24,6 +24,7 @@ export interface RequestConfig {
   timeoutMs: number
   repeatMode: RepeatMode
   repeatCount: number
+  useProxy: boolean
 }
 
 export interface RequestResult {

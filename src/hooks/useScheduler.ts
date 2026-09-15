@@ -12,12 +12,15 @@ interface Runtime {
 interface SchedulerCallbacks {
   onResult: (jobId: string, result: RequestResult) => void
   onStatusChange: (jobId: string, status: 'running' | 'stopped' | 'completed') => void
+  getProxyUrl: () => string | undefined
 }
 
-export function useScheduler({ onResult, onStatusChange }: SchedulerCallbacks) {
+export function useScheduler({ onResult, onStatusChange, getProxyUrl }: SchedulerCallbacks) {
   const runtimes = useRef<Map<string, Runtime>>(new Map())
-  const callbacksRef = useRef({ onResult, onStatusChange })
-  callbacksRef.current = { onResult, onStatusChange }
+  const callbacksRef = useRef({ onResult, onStatusChange, getProxyUrl })
+  useEffect(() => {
+    callbacksRef.current = { onResult, onStatusChange, getProxyUrl }
+  })
 
   useEffect(() => {
     const map = runtimes.current
@@ -38,7 +41,7 @@ export function useScheduler({ onResult, onStatusChange }: SchedulerCallbacks) {
     const controller = new AbortController()
     runtime.controller = controller
 
-    executeRequest(config, controller.signal, runtime.attempt).then((result) => {
+    executeRequest(config, controller.signal, runtime.attempt, callbacksRef.current.getProxyUrl()).then((result) => {
       const current = runtimes.current.get(config.id)
       if (!current || !current.active) return
 
@@ -73,7 +76,7 @@ export function useScheduler({ onResult, onStatusChange }: SchedulerCallbacks) {
 
   async function runOnce(config: RequestConfig) {
     const controller = new AbortController()
-    const result = await executeRequest(config, controller.signal, -1)
+    const result = await executeRequest(config, controller.signal, -1, callbacksRef.current.getProxyUrl())
     callbacksRef.current.onResult(config.id, result)
   }
 

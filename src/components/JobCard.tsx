@@ -73,6 +73,14 @@ export function JobCard({ job, isRunning, onStart, onStop, onRunOnce, onEdit, on
                 {isRunning && <span className="size-1.5 animate-pulse rounded-full bg-current" />}
                 {displayStatus}
               </span>
+              {config.useProxy && (
+                <span
+                  title="Requests for this job are routed through your proxy"
+                  className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-900/40 dark:text-violet-400"
+                >
+                  via proxy
+                </span>
+              )}
             </div>
             <p className="mt-0.5 truncate font-mono text-xs text-slate-500 dark:text-slate-400">{config.url}</p>
             <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">

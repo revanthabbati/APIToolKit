@@ -7,6 +7,7 @@ import { KeyValueEditor } from './KeyValueEditor'
 
 interface Props {
   initial?: RequestConfig
+  proxyConfigured: boolean
   onSubmit: (config: RequestConfig) => void
   onCancel: () => void
 }
@@ -52,7 +53,7 @@ function mergeQueryParams(existing: KeyValue[], incoming: KeyValue[]): KeyValue[
   return result
 }
 
-export function JobForm({ initial, onSubmit, onCancel }: Props) {
+export function JobForm({ initial, proxyConfigured, onSubmit, onCancel }: Props) {
   const [draft, setDraft] = useState<RequestConfig>(() => initial ?? createEmptyConfig())
   const [delaySecondsInput, setDelaySecondsInput] = useState(() => String(draft.delayMs / 1000))
   const [timeoutSecondsInput, setTimeoutSecondsInput] = useState(() => String(draft.timeoutMs / 1000))
@@ -146,6 +147,19 @@ export function JobForm({ initial, onSubmit, onCancel }: Props) {
         <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
           Paste a URL with a query string and it'll move into Query parameters below.
         </p>
+        <label className="mt-2 flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={draft.useProxy}
+            onChange={(e) => patch({ useProxy: e.target.checked })}
+            disabled={!proxyConfigured}
+            className="accent-indigo-600"
+          />
+          Route through proxy (for APIs blocked by CORS)
+        </label>
+        {!proxyConfigured && (
+          <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">Set a proxy URL in Settings to enable this.</p>
+        )}
       </div>
 
       <div>

@@ -2,6 +2,7 @@ import type { Job } from './types'
 
 const STORAGE_KEY = 'apitoolkit.jobs.v1'
 const THEME_KEY = 'apitoolkit.theme.v1'
+const PROXY_URL_KEY = 'apitoolkit.proxyUrl.v1'
 export const MAX_RESULTS_PER_JOB = 200
 
 export function loadJobs(): Job[] {
@@ -43,6 +44,22 @@ export function loadTheme(): ThemePreference {
 export function saveTheme(theme: ThemePreference): void {
   try {
     localStorage.setItem(THEME_KEY, theme)
+  } catch {
+    // ignore write failures (private browsing, storage full, etc.)
+  }
+}
+
+export function loadProxyUrl(): string {
+  try {
+    return localStorage.getItem(PROXY_URL_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function saveProxyUrl(url: string): void {
+  try {
+    localStorage.setItem(PROXY_URL_KEY, url)
   } catch {
     // ignore write failures (private browsing, storage full, etc.)
   }

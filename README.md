@@ -15,13 +15,14 @@ A browser-based tool for firing an API request on repeat and capturing every res
 - Search/filter history, export as JSON or CSV, export/import full job configs for backup or sharing
 - Light/dark/system theme
 - Everything persists locally in your browser (`localStorage`) — no account, no backend
+- Optional self-deployed proxy (see [`proxy/`](proxy/)) for APIs that block CORS
 
 ## How it works
 
 This is a static, client-side React app. There is no server: the scheduler runs with `setTimeout` in your browser tab, and requests are sent directly from the browser with `fetch`. Two consequences follow from that:
 
 - **The tab needs to stay open** for scheduled requests to keep firing. Closing it (or the browser) stops the schedule.
-- **Target APIs must allow cross-origin requests (CORS).** Since requests come straight from your browser, an API that doesn't send `Access-Control-Allow-Origin` will block the browser from reading the response. This is a browser security limitation, not something this app can bypass — if you need to hit an API without CORS support, put a small proxy in front of it.
+- **Target APIs must allow cross-origin requests (CORS).** Since requests come straight from your browser, an API that doesn't send `Access-Control-Allow-Origin` will block the browser from reading the response — no code in this app can work around that, it's enforced by the browser itself. For APIs you don't control the CORS config of, see the [`proxy/`](proxy/) folder: a small Cloudflare Worker you deploy yourself that makes the request server-to-server instead (no browser, no CORS), which the app can route through via **Proxy settings**.
 
 This is a request scheduler/monitor for testing and watching your own APIs, not a load-testing tool — the minimum delay between requests is intentionally capped (200ms) to avoid accidentally hammering a target.
 

@@ -23,6 +23,7 @@ export function createEmptyConfig(): RequestConfig {
     timeoutMs: DEFAULT_TIMEOUT_MS,
     repeatMode: 'infinite',
     repeatCount: DEFAULT_REPEAT_COUNT,
+    useProxy: false,
   }
 }
 

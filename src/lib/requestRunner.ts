@@ -1,4 +1,4 @@
-import type { KeyValue, RequestConfig, RequestResult } from './types'
+import type { HttpMethod, KeyValue, RequestConfig, RequestResult } from './types'
 
 const MAX_BODY_CHARS = 200_000
 
@@ -44,10 +44,51 @@ function describeError(err: unknown): string {
   return String(err)
 }
 
+interface RawResponse {
+  status: number
+  statusText: string
+  headers: Record<string, string>
+  bodyText: string
+}
+
+async function fetchDirect(url: string, method: HttpMethod, headers: Headers, body: string | undefined, signal: AbortSignal): Promise<RawResponse> {
+  const res = await fetch(url, { method, headers, body, signal })
+  const bodyText = await res.text()
+  return { status: res.status, statusText: res.statusText, headers: headersToObject(res.headers), bodyText }
+}
+
+async function fetchViaProxy(
+  proxyUrl: string,
+  url: string,
+  method: HttpMethod,
+  headers: Headers,
+  body: string | undefined,
+  signal: AbortSignal,
+): Promise<RawResponse> {
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, method, headers: headersToObject(headers), body }),
+    signal,
+  })
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(`Proxy error (${res.status})${detail ? `: ${detail.slice(0, 300)}` : ''}`)
+  }
+  const envelope = await res.json()
+  return {
+    status: envelope.status,
+    statusText: envelope.statusText ?? '',
+    headers: envelope.headers ?? {},
+    bodyText: envelope.body ?? '',
+  }
+}
+
 export async function executeRequest(
   config: RequestConfig,
   externalSignal: AbortSignal,
   attempt: number,
+  proxyUrl?: string,
 ): Promise<RequestResult> {
   const startedAt = Date.now()
   const t0 = performance.now()
@@ -73,35 +114,32 @@ export async function executeRequest(
   }
 
   try {
-    const res = await fetch(url, {
-      method: config.method,
-      headers,
-      body: hasBody ? config.body : undefined,
-      signal,
-    })
-    const fullText = await res.text()
-    const truncated = fullText.length > MAX_BODY_CHARS
-    const finishedAt = Date.now()
+    const body = hasBody ? config.body : undefined
+    const raw =
+      config.useProxy && proxyUrl
+        ? await fetchViaProxy(proxyUrl, url, config.method, headers, body, signal)
+        : await fetchDirect(url, config.method, headers, body, signal)
+
+    const truncated = raw.bodyText.length > MAX_BODY_CHARS
     return {
       ...base,
       startedAt,
-      finishedAt,
+      finishedAt: Date.now(),
       durationMs: performance.now() - t0,
-      ok: res.ok,
-      status: res.status,
-      statusText: res.statusText,
-      responseHeaders: headersToObject(res.headers),
-      responseBody: truncated ? fullText.slice(0, MAX_BODY_CHARS) : fullText,
+      ok: raw.status >= 200 && raw.status < 300,
+      status: raw.status,
+      statusText: raw.statusText,
+      responseHeaders: raw.headers,
+      responseBody: truncated ? raw.bodyText.slice(0, MAX_BODY_CHARS) : raw.bodyText,
       responseTruncated: truncated,
-      responseSize: fullText.length,
+      responseSize: raw.bodyText.length,
     }
   } catch (err) {
-    const finishedAt = Date.now()
     const timedOut = timeoutController.signal.aborted
     return {
       ...base,
       startedAt,
-      finishedAt,
+      finishedAt: Date.now(),
       durationMs: performance.now() - t0,
       ok: false,
       error: timedOut ? `Timed out after ${config.timeoutMs}ms` : describeError(err),

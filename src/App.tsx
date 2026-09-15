@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { JobCard } from './components/JobCard'
 import { JobForm } from './components/JobForm'
 import { Modal } from './components/Modal'
+import { ProxySettings } from './components/ProxySettings'
 import { ThemeToggle } from './components/ThemeToggle'
 import { useJobs } from './hooks/useJobs'
+import { useProxyUrl } from './hooks/useProxyUrl'
 import { useScheduler } from './hooks/useScheduler'
 import { createDemoConfig } from './lib/factory'
 import type { Job, RequestConfig } from './lib/types'
@@ -15,11 +17,14 @@ interface FormState {
 
 function App() {
   const { jobs, addJob, updateJobConfig, removeJob, duplicateJob, setStatus, appendResult, clearHistory, importJobs } = useJobs()
+  const { proxyUrl, setProxyUrl } = useProxyUrl()
   const [formState, setFormState] = useState<FormState | null>(null)
+  const [showProxySettings, setShowProxySettings] = useState(false)
 
   const scheduler = useScheduler({
     onResult: appendResult,
     onStatusChange: setStatus,
+    getProxyUrl: () => proxyUrl,
   })
 
   function handleSubmit(config: RequestConfig) {
@@ -104,6 +109,13 @@ function App() {
             >
               Export all
             </button>
+            <button
+              type="button"
+              onClick={() => setShowProxySettings(true)}
+              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              Proxy settings
+            </button>
             <ThemeToggle />
             <button
               type="button"
@@ -162,15 +174,22 @@ function App() {
 
       <footer className="mx-auto max-w-5xl px-4 pb-8 text-center text-xs text-slate-400 dark:text-slate-500">
         Runs entirely in your browser — nothing leaves your machine except the requests you configure. Keep this tab open for
-        scheduled requests to keep firing, and remember target APIs must allow cross-origin requests (CORS) to be called
-        directly from here.
+        scheduled requests to keep firing. Target APIs must allow cross-origin requests (CORS) to be called directly from
+        here — for ones that don't, set up the proxy under Proxy settings.
       </footer>
 
       {formState && (
         <Modal title={formState.mode === 'edit' ? 'Edit request' : 'New request'} onClose={() => setFormState(null)}>
-          <JobForm initial={formState.job?.config} onSubmit={handleSubmit} onCancel={() => setFormState(null)} />
+          <JobForm
+            initial={formState.job?.config}
+            proxyConfigured={proxyUrl.trim() !== ''}
+            onSubmit={handleSubmit}
+            onCancel={() => setFormState(null)}
+          />
         </Modal>
       )}
+
+      {showProxySettings && <ProxySettings value={proxyUrl} onSave={setProxyUrl} onClose={() => setShowProxySettings(false)} />}
     </div>
   )
 }
