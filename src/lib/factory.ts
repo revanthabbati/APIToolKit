@@ -24,6 +24,7 @@ export function createEmptyConfig(): RequestConfig {
     repeatMode: 'infinite',
     repeatCount: DEFAULT_REPEAT_COUNT,
     useProxy: false,
+    overlapRequests: false,
   }
 }
 

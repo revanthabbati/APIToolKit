@@ -81,6 +81,14 @@ export function JobCard({ job, isRunning, onStart, onStop, onRunOnce, onEdit, on
                   via proxy
                 </span>
               )}
+              {config.overlapRequests && (
+                <span
+                  title="Fires on schedule without waiting for earlier requests to respond — multiple can be in flight at once"
+                  className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"
+                >
+                  overlapping
+                </span>
+              )}
             </div>
             <p className="mt-0.5 truncate font-mono text-xs text-slate-500 dark:text-slate-400">{config.url}</p>
             <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">

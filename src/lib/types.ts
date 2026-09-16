@@ -25,6 +25,7 @@ export interface RequestConfig {
   repeatMode: RepeatMode
   repeatCount: number
   useProxy: boolean
+  overlapRequests: boolean
 }
 
 export interface RequestResult {

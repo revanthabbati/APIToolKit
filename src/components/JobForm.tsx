@@ -248,6 +248,26 @@ export function JobForm({ initial, proxyConfigured, onSubmit, onCancel }: Props)
         </div>
       </div>
 
+      <div>
+        <label className={labelClass}>If a request hasn't finished yet</label>
+        <div className="mt-1 flex flex-col gap-1.5 text-sm text-slate-700 dark:text-slate-300">
+          <label className="flex items-center gap-1.5">
+            <input type="radio" checked={!draft.overlapRequests} onChange={() => patch({ overlapRequests: false })} className="accent-indigo-600" />
+            Wait for it before sending the next (default)
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input type="radio" checked={draft.overlapRequests} onChange={() => patch({ overlapRequests: true })} className="accent-indigo-600" />
+            Send the next one anyway, on schedule
+          </label>
+        </div>
+        {draft.overlapRequests && (
+          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+            Requests fire every {(draft.delayMs / 1000).toFixed(draft.delayMs % 1000 === 0 ? 0 : 1)}s regardless of
+            whether earlier ones have responded — several can be in flight at once if the API is slower than the delay.
+          </p>
+        )}
+      </div>
+
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       <div className="flex justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
