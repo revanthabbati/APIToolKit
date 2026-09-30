@@ -1,4 +1,5 @@
-import type { HttpMethod, KeyValue, RequestConfig, RequestResult } from './types'
+import { describeFetchError, fetchThrough, headersToObject } from './fetchThrough'
+import type { KeyValue, RequestConfig, RequestResult } from './types'
 
 const MAX_BODY_CHARS = 200_000
 
@@ -25,63 +26,6 @@ function buildHeaders(headers: KeyValue[]): Headers {
     if (h.enabled && h.key.trim() !== '') result.set(h.key, h.value)
   }
   return result
-}
-
-function headersToObject(headers: Headers): Record<string, string> {
-  const out: Record<string, string> = {}
-  headers.forEach((value, key) => {
-    out[key] = value
-  })
-  return out
-}
-
-function describeError(err: unknown): string {
-  if (err instanceof DOMException && err.name === 'AbortError') return 'Request aborted'
-  if (err instanceof TypeError) {
-    return 'Request failed — likely blocked by CORS policy, a network error, or an invalid URL.'
-  }
-  if (err instanceof Error) return err.message
-  return String(err)
-}
-
-interface RawResponse {
-  status: number
-  statusText: string
-  headers: Record<string, string>
-  bodyText: string
-}
-
-async function fetchDirect(url: string, method: HttpMethod, headers: Headers, body: string | undefined, signal: AbortSignal): Promise<RawResponse> {
-  const res = await fetch(url, { method, headers, body, signal })
-  const bodyText = await res.text()
-  return { status: res.status, statusText: res.statusText, headers: headersToObject(res.headers), bodyText }
-}
-
-async function fetchViaProxy(
-  proxyUrl: string,
-  url: string,
-  method: HttpMethod,
-  headers: Headers,
-  body: string | undefined,
-  signal: AbortSignal,
-): Promise<RawResponse> {
-  const res = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, method, headers: headersToObject(headers), body }),
-    signal,
-  })
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(`Proxy error (${res.status})${detail ? `: ${detail.slice(0, 300)}` : ''}`)
-  }
-  const envelope = await res.json()
-  return {
-    status: envelope.status,
-    statusText: envelope.statusText ?? '',
-    headers: envelope.headers ?? {},
-    bodyText: envelope.body ?? '',
-  }
 }
 
 export async function executeRequest(
@@ -115,10 +59,7 @@ export async function executeRequest(
 
   try {
     const body = hasBody ? config.body : undefined
-    const raw =
-      config.useProxy && proxyUrl
-        ? await fetchViaProxy(proxyUrl, url, config.method, headers, body, signal)
-        : await fetchDirect(url, config.method, headers, body, signal)
+    const raw = await fetchThrough(url, config.method, headers, body, signal, config.useProxy ? proxyUrl : undefined)
 
     const truncated = raw.bodyText.length > MAX_BODY_CHARS
     return {
@@ -142,7 +83,7 @@ export async function executeRequest(
       finishedAt: Date.now(),
       durationMs: performance.now() - t0,
       ok: false,
-      error: timedOut ? `Timed out after ${config.timeoutMs}ms` : describeError(err),
+      error: timedOut ? `Timed out after ${config.timeoutMs}ms` : describeFetchError(err),
     }
   } finally {
     window.clearTimeout(timeoutId)

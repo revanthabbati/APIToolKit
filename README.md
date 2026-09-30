@@ -1,6 +1,6 @@
 # API ToolKit
 
-A browser-based tool for firing an API request on repeat and capturing every response. Configure a URL, method, headers, query params, and body, set a delay between runs, hit **Start**, and watch results come in live.
+A browser-based tool for firing an API request on repeat and capturing every response. Configure a URL, method, headers, query params, and body, set a delay between runs, hit **Start**, and watch results come in live. Also includes a purpose-built module for building Samsung DispatchTrack import payloads.
 
 **Live app:** [revanthabbati.github.io/APIToolKit](https://revanthabbati.github.io/APIToolKit/) (once GitHub Pages is enabled — see [Deploying](#deploying))
 
@@ -25,6 +25,10 @@ This is a static, client-side React app. There is no server: the scheduler runs 
 - **Target APIs must allow cross-origin requests (CORS).** Since requests come straight from your browser, an API that doesn't send `Access-Control-Allow-Origin` will block the browser from reading the response — no code in this app can work around that, it's enforced by the browser itself. For APIs you don't control the CORS config of, see the [`proxy/`](proxy/) folder: a small Cloudflare Worker you deploy yourself that makes the request server-to-server instead (no browser, no CORS), which the app can route through via **Proxy settings**.
 
 This is a request scheduler/monitor for testing and watching your own APIs, not a load-testing tool — the minimum delay between requests is intentionally capped (200ms) to avoid accidentally hammering a target.
+
+## Samsung Import Builder
+
+A second module (its own tab in the app) for a specific workflow: call DispatchTrack's fetch-samsung-orders API for a route, call the export API for each order it returns, and merge everything into one Samsung import payload per order — built from an editable template, the fetched order, the exported customer/item details, and optional overrides. Handles the export API's non-strict XML (a raw `&` DispatchTrack sends that breaks strict parsers), matches items between the two APIs by SKU, and lets you download the results as a combined JSON array or a ZIP of one `import_{do_no}.json` file per order. Same CORS rules as above apply — route it through the proxy for the deployed site.
 
 ## Local development
 

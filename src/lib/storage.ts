@@ -1,8 +1,11 @@
+import type { SamsungRunConfig } from './samsungTypes'
 import type { Job } from './types'
 
 const STORAGE_KEY = 'apitoolkit.jobs.v1'
 const THEME_KEY = 'apitoolkit.theme.v1'
 const PROXY_URL_KEY = 'apitoolkit.proxyUrl.v1'
+const SAMSUNG_CONFIG_KEY = 'apitoolkit.samsungConfig.v1'
+const ACTIVE_MODULE_KEY = 'apitoolkit.activeModule.v1'
 export const MAX_RESULTS_PER_JOB = 200
 
 export function loadJobs(): Job[] {
@@ -60,6 +63,41 @@ export function loadProxyUrl(): string {
 export function saveProxyUrl(url: string): void {
   try {
     localStorage.setItem(PROXY_URL_KEY, url)
+  } catch {
+    // ignore write failures (private browsing, storage full, etc.)
+  }
+}
+
+export function loadSamsungConfig(): SamsungRunConfig | null {
+  try {
+    const raw = localStorage.getItem(SAMSUNG_CONFIG_KEY)
+    return raw ? (JSON.parse(raw) as SamsungRunConfig) : null
+  } catch {
+    return null
+  }
+}
+
+export function saveSamsungConfig(config: SamsungRunConfig): void {
+  try {
+    localStorage.setItem(SAMSUNG_CONFIG_KEY, JSON.stringify(config))
+  } catch {
+    // ignore write failures (private browsing, storage full, etc.)
+  }
+}
+
+export type ActiveModule = 'requests' | 'samsung'
+
+export function loadActiveModule(): ActiveModule {
+  try {
+    return localStorage.getItem(ACTIVE_MODULE_KEY) === 'samsung' ? 'samsung' : 'requests'
+  } catch {
+    return 'requests'
+  }
+}
+
+export function saveActiveModule(module: ActiveModule): void {
+  try {
+    localStorage.setItem(ACTIVE_MODULE_KEY, module)
   } catch {
     // ignore write failures (private browsing, storage full, etc.)
   }
