@@ -37,7 +37,8 @@ export const EXAMPLE_TEMPLATE_TEXT = `{
 
 export function createDefaultSamsungConfig(): SamsungRunConfig {
   return {
-    code: 'pulsesea',
+    dispatchtrackHost: '',
+    code: '',
     serviceRouteId: '',
     timeStamp: '',
     apiKey: '',

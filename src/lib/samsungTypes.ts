@@ -37,6 +37,7 @@ export interface SamsungOverrides {
 }
 
 export interface SamsungRunConfig {
+  dispatchtrackHost: string
   code: string
   serviceRouteId: string
   timeStamp: string

@@ -35,8 +35,14 @@ export function SamsungForm({ config, onChange, proxyConfigured, running, onRun,
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!config.code.trim() || !config.serviceRouteId.trim() || !config.timeStamp.trim() || !config.apiKey.trim()) {
-      setError('Code, route ID, timestamp, and API key are all required.')
+    if (
+      !config.dispatchtrackHost.trim() ||
+      !config.code.trim() ||
+      !config.serviceRouteId.trim() ||
+      !config.timeStamp.trim() ||
+      !config.apiKey.trim()
+    ) {
+      setError('DispatchTrack host, code, route ID, timestamp, and API key are all required.')
       return
     }
     try {
@@ -51,6 +57,18 @@ export function SamsungForm({ config, onChange, proxyConfigured, running, onRun,
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label className={labelClass}>DispatchTrack host</label>
+        <input
+          type="text"
+          value={config.dispatchtrackHost}
+          onChange={(e) => patch({ dispatchtrackHost: e.target.value })}
+          disabled={running}
+          placeholder="yourcompany.dispatchtrack.com"
+          className={`mt-1 font-mono ${inputClass}`}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Code</label>
@@ -59,7 +77,7 @@ export function SamsungForm({ config, onChange, proxyConfigured, running, onRun,
             value={config.code}
             onChange={(e) => patch({ code: e.target.value })}
             disabled={running}
-            placeholder="pulsesea"
+            placeholder="yourcode"
             className={`mt-1 ${inputClass}`}
           />
         </div>

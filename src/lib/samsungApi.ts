@@ -5,18 +5,20 @@ import type { ImportTemplate } from './samsungPayload'
 import { findMatchingDetail, parseExportXml } from './samsungXml'
 import type { SamsungExportDetail, SamsungFetchResponse, SamsungOrderResult, SamsungRunConfig, SamsungRunSummary } from './samsungTypes'
 
-const FETCH_URL = 'https://pulsesea.dispatchtrack.com/fetch-samsung-orders'
-const EXPORT_URL = 'https://pulsesea.dispatchtrack.com/orders/api/export.xml'
 const EXPORT_CONCURRENCY = 4
 
-function buildFetchUrl(code: string, routeId: string, timeStamp: string): string {
-  const params = new URLSearchParams({ code, service_route_id: routeId, time_stamp: timeStamp })
-  return `${FETCH_URL}?${params.toString()}`
+function normalizeHost(host: string): string {
+  return host.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '')
 }
 
-function buildExportUrl(code: string, apiKey: string, orderNumber: string): string {
+function buildFetchUrl(host: string, code: string, routeId: string, timeStamp: string): string {
+  const params = new URLSearchParams({ code, service_route_id: routeId, time_stamp: timeStamp })
+  return `https://${normalizeHost(host)}/fetch-samsung-orders?${params.toString()}`
+}
+
+function buildExportUrl(host: string, code: string, apiKey: string, orderNumber: string): string {
   const params = new URLSearchParams({ code, api_key: apiKey, service_order_id: orderNumber })
-  return `${EXPORT_URL}?${params.toString()}`
+  return `https://${normalizeHost(host)}/orders/api/export.xml?${params.toString()}`
 }
 
 function parseTemplate(templateText: string): ImportTemplate {
@@ -46,7 +48,7 @@ export async function runSamsungImport(
   const template = parseTemplate(config.templateText)
   const effectiveProxy = config.useProxy ? proxyUrl : undefined
 
-  const fetchUrl = buildFetchUrl(config.code, config.serviceRouteId, config.timeStamp)
+  const fetchUrl = buildFetchUrl(config.dispatchtrackHost, config.code, config.serviceRouteId, config.timeStamp)
   const fetchRaw = await fetchThrough(fetchUrl, 'GET', new Headers(), undefined, signal, effectiveProxy)
   if (fetchRaw.status < 200 || fetchRaw.status >= 300) {
     throw new Error(`Fetch API returned ${fetchRaw.status} ${fetchRaw.statusText}`)
@@ -70,7 +72,7 @@ export async function runSamsungImport(
     let details: SamsungExportDetail | undefined
     let error: string | undefined
     try {
-      const exportUrl = buildExportUrl(config.code, config.apiKey, order.order_number)
+      const exportUrl = buildExportUrl(config.dispatchtrackHost, config.code, config.apiKey, order.order_number)
       const exportRaw = await fetchThrough(exportUrl, 'GET', new Headers(), undefined, signal, effectiveProxy)
       if (exportRaw.status < 200 || exportRaw.status >= 300) {
         throw new Error(`Export API returned ${exportRaw.status} ${exportRaw.statusText}`)
