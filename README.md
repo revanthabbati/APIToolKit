@@ -26,6 +26,15 @@ This is a static, client-side React app. There is no server: the scheduler runs 
 
 This is a request scheduler/monitor for testing and watching your own APIs, not a load-testing tool — the minimum delay between requests is intentionally capped (200ms) to avoid accidentally hammering a target.
 
+## Pagination Runner
+
+Paste a cURL command (bash or Windows cmd format) or a URL, mark which query parameters or headers should **Iterate**, set a start/end/step range, and it sends one request per value — e.g. `page_no=1`, `page_no=2`, … up to the end. Use `{{n}}` in the URL path or body for path-style paging, or a step like 25 for offset-style paging. Page-like params (`page`, `page_no`, `_page`, …) are marked to iterate automatically on import.
+
+- Saved endpoints: keep several configurations, duplicate and switch between them.
+- Concurrency (1–10), delay between requests, per-request timeout, max 1000 requests per run.
+- Stops early when a page comes back with no records, or optionally on the first failure; **Retry failed** re-sends only the requests that failed.
+- Results two ways: **Combined** merges the records from every page into one list (the records array is auto-detected, e.g. `eld_devices` or `data.items`, or set it explicitly), and **Individual** shows each response on its own. Download either as JSON, or all pages as a ZIP.
+
 ## Samsung Import Builder
 
 A second module (its own tab in the app) for a specific workflow: call DispatchTrack's fetch-samsung-orders API for a route, call the export API for each order it returns, and merge everything into one Samsung import payload per order — built from an editable template, the fetched order, the exported customer/item details, and optional overrides. Handles the export API's non-strict XML (a raw `&` DispatchTrack sends that breaks strict parsers), matches items between the two APIs by SKU, and lets you download the results as a combined JSON array or a ZIP of one `import_{do_no}.json` file per order. Same CORS rules as above apply — route it through the proxy for the deployed site.

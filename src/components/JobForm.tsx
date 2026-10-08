@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { createEmptyConfig, createKeyValue, MIN_DELAY_MS } from '../lib/factory'
+import { createEmptyConfig, MIN_DELAY_MS } from '../lib/factory'
+import { extractQueryParams, mergeQueryParams } from '../lib/queryParams'
 import { HTTP_METHODS } from '../lib/types'
-import type { BodyType, HttpMethod, KeyValue, RequestConfig } from '../lib/types'
+import type { BodyType, HttpMethod, RequestConfig } from '../lib/types'
 import { KeyValueEditor } from './KeyValueEditor'
 
 interface Props {
@@ -15,43 +16,6 @@ interface Props {
 const inputClass =
   'w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500'
 const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300'
-
-function extractQueryParams(raw: string): { base: string; params: KeyValue[] } | null {
-  const qIndex = raw.indexOf('?')
-  if (qIndex === -1) return null
-
-  const base = raw.slice(0, qIndex)
-  let queryPart = raw.slice(qIndex + 1)
-  let hash = ''
-  const hashIndex = queryPart.indexOf('#')
-  if (hashIndex !== -1) {
-    hash = queryPart.slice(hashIndex)
-    queryPart = queryPart.slice(0, hashIndex)
-  }
-  if (queryPart === '') return null
-
-  const params = [...new URLSearchParams(queryPart).entries()].map(([key, value]) => createKeyValue(key, value))
-  if (params.length === 0) return null
-
-  return { base: base + hash, params }
-}
-
-function mergeQueryParams(existing: KeyValue[], incoming: KeyValue[]): KeyValue[] {
-  const result = existing.filter((kv) => kv.key.trim() !== '' || kv.value.trim() !== '')
-  const matchedKeys = new Set<string>()
-
-  for (const inc of incoming) {
-    const idx = matchedKeys.has(inc.key) ? -1 : result.findIndex((kv) => kv.key === inc.key)
-    if (idx !== -1) {
-      result[idx] = { ...result[idx], value: inc.value, enabled: true }
-    } else {
-      result.push(inc)
-    }
-    matchedKeys.add(inc.key)
-  }
-
-  return result
-}
 
 export function JobForm({ initial, proxyConfigured, onSubmit, onCancel }: Props) {
   const [draft, setDraft] = useState<RequestConfig>(() => initial ?? createEmptyConfig())

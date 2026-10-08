@@ -1,3 +1,4 @@
+import type { PaginationConfig } from './paginationTypes'
 import type { SamsungRunConfig } from './samsungTypes'
 import type { Job } from './types'
 
@@ -6,6 +7,7 @@ const THEME_KEY = 'apitoolkit.theme.v1'
 const PROXY_URL_KEY = 'apitoolkit.proxyUrl.v1'
 const SAMSUNG_CONFIG_KEY = 'apitoolkit.samsungConfig.v1'
 const ACTIVE_MODULE_KEY = 'apitoolkit.activeModule.v1'
+const PAGINATION_KEY = 'apitoolkit.pagination.v1'
 export const MAX_RESULTS_PER_JOB = 200
 
 export function loadJobs(): Job[] {
@@ -85,13 +87,38 @@ export function saveSamsungConfig(config: SamsungRunConfig): void {
   }
 }
 
-export type ActiveModule = 'requests' | 'samsung'
+export type ActiveModule = 'requests' | 'pagination' | 'samsung'
 
 export function loadActiveModule(): ActiveModule {
   try {
-    return localStorage.getItem(ACTIVE_MODULE_KEY) === 'samsung' ? 'samsung' : 'requests'
+    const raw = localStorage.getItem(ACTIVE_MODULE_KEY)
+    return raw === 'samsung' || raw === 'pagination' ? raw : 'requests'
   } catch {
     return 'requests'
+  }
+}
+
+export interface StoredPaginationState {
+  configs: PaginationConfig[]
+  selectedId: string | null
+}
+
+export function loadPaginationState(): StoredPaginationState | null {
+  try {
+    const raw = localStorage.getItem(PAGINATION_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as StoredPaginationState
+    return Array.isArray(parsed?.configs) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+export function savePaginationState(state: StoredPaginationState): void {
+  try {
+    localStorage.setItem(PAGINATION_KEY, JSON.stringify(state))
+  } catch {
+    // ignore write failures (private browsing, storage full, etc.)
   }
 }
 

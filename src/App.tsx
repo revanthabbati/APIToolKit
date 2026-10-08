@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PaginationModule } from './components/PaginationModule'
 import { ProxySettings } from './components/ProxySettings'
 import { RequestRunnerView } from './components/RequestRunnerView'
 import { SamsungModule } from './components/SamsungModule'
@@ -9,6 +10,7 @@ import type { ActiveModule } from './lib/storage'
 
 const MODULE_LABELS: Record<ActiveModule, string> = {
   requests: 'Request Runner',
+  pagination: 'Pagination Runner',
   samsung: 'Samsung Import Builder',
 }
 
@@ -60,7 +62,9 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
-        {activeModule === 'requests' ? <RequestRunnerView proxyUrl={proxyUrl} /> : <SamsungModule proxyUrl={proxyUrl} />}
+        {activeModule === 'requests' && <RequestRunnerView proxyUrl={proxyUrl} />}
+        {activeModule === 'pagination' && <PaginationModule proxyUrl={proxyUrl} />}
+        {activeModule === 'samsung' && <SamsungModule proxyUrl={proxyUrl} />}
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-8 text-center text-xs text-slate-400 dark:text-slate-500">

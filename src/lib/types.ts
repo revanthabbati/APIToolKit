@@ -9,6 +9,7 @@ export interface KeyValue {
   key: string
   value: string
   enabled: boolean
+  increment?: boolean
 }
 
 export interface RequestConfig {

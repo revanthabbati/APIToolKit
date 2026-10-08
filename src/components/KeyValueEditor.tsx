@@ -7,9 +7,17 @@ interface Props {
   keyPlaceholder?: string
   valuePlaceholder?: string
   disabled?: boolean
+  showIncrement?: boolean
 }
 
-export function KeyValueEditor({ items, onChange, keyPlaceholder = 'Key', valuePlaceholder = 'Value', disabled }: Props) {
+export function KeyValueEditor({
+  items,
+  onChange,
+  keyPlaceholder = 'Key',
+  valuePlaceholder = 'Value',
+  disabled,
+  showIncrement,
+}: Props) {
   function update(id: string, patch: Partial<KeyValue>) {
     onChange(items.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }
@@ -45,13 +53,32 @@ export function KeyValueEditor({ items, onChange, keyPlaceholder = 'Key', valueP
           />
           <input
             type="text"
-            value={item.value}
+            value={item.increment ? '' : item.value}
             onChange={(e) => update(item.id, { value: e.target.value })}
-            placeholder={valuePlaceholder}
-            disabled={disabled}
+            placeholder={item.increment ? 'iterated value' : valuePlaceholder}
+            disabled={disabled || item.increment}
             aria-label={valuePlaceholder}
             className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
           />
+          {showIncrement && (
+            <label
+              title="Replace this value with the iteration number on each request"
+              className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium ${
+                item.increment
+                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
+                  : 'border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={!!item.increment}
+                onChange={(e) => update(item.id, { increment: e.target.checked })}
+                disabled={disabled}
+                className="size-3 accent-indigo-600"
+              />
+              Iterate
+            </label>
+          )}
           <button
             type="button"
             onClick={() => remove(item.id)}
