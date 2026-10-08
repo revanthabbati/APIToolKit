@@ -26,6 +26,24 @@ export function describeFetchError(err: unknown): string {
   return String(err)
 }
 
+// Turns the proxy worker's own rejections into instructions for fixing its config.
+function explainProxyError(status: number, detail: string): string {
+  let message = ''
+  try {
+    message = String(JSON.parse(detail).error ?? '')
+  } catch {
+    // not JSON — fall through to the raw detail
+  }
+  const host = /^Target host not allowed: (.+)$/.exec(message)?.[1]
+  if (host) {
+    return `Your proxy isn't allowed to call ${host} yet. Add its domain to ALLOWED_HOST_SUFFIXES in the proxy worker's code and redeploy it.`
+  }
+  if (message === 'Origin not allowed') {
+    return `Your proxy only accepts requests from its configured site, not ${window.location.origin}. Set ALLOWED_ORIGIN in the proxy worker to ${window.location.origin} and redeploy it.`
+  }
+  return `Proxy error (${status})${detail ? `: ${detail.slice(0, 300)}` : ''}`
+}
+
 export async function fetchDirect(
   url: string,
   method: string,
@@ -54,7 +72,7 @@ export async function fetchViaProxy(
   })
   if (!res.ok) {
     const detail = await res.text().catch(() => '')
-    throw new Error(`Proxy error (${res.status})${detail ? `: ${detail.slice(0, 300)}` : ''}`)
+    throw new Error(explainProxyError(res.status, detail))
   }
   const envelope = await res.json()
   return {
