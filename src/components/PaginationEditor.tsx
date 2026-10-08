@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { MIN_TIMEOUT_MS } from '../lib/factory'
 import { applyCurlToConfig } from '../lib/paginationFactory'
 import { buildPageRequest, computeTasks, MAX_ITERATIONS, usesIteration } from '../lib/paginationRunner'
 import type { PaginationConfig } from '../lib/paginationTypes'
@@ -29,11 +30,13 @@ function NumberField({
   onCommit,
   disabled,
   min,
+  step,
 }: {
   value: number
   onCommit: (n: number) => void
   disabled?: boolean
   min?: number
+  step?: number | 'any'
 }) {
   const [text, setText] = useState(String(value))
   const [synced, setSynced] = useState(value)
@@ -47,11 +50,13 @@ function NumberField({
       type="number"
       value={text}
       min={min}
+      step={step}
       disabled={disabled}
       onChange={(e) => {
         setText(e.target.value)
         const n = Number(e.target.value)
-        if (e.target.value.trim() !== '' && Number.isFinite(n)) {
+        // Below-minimum values are usually mid-typing (e.g. "0" on the way to "0.05"); wait for a valid one.
+        if (e.target.value.trim() !== '' && Number.isFinite(n) && (min === undefined || n >= min)) {
           setSynced(n)
           onCommit(n)
         }
@@ -295,14 +300,16 @@ export function PaginationEditor({ config, onChange, proxyConfigured, running, o
           <label className={labelClass}>Timeout (s)</label>
           <NumberField
             value={config.timeoutMs / 1000}
-            onCommit={(n) => patch({ timeoutMs: Math.max(1, n) * 1000 })}
+            onCommit={(n) => patch({ timeoutMs: Math.max(MIN_TIMEOUT_MS, Math.round(n * 1000)) })}
             disabled={running}
-            min={1}
+            min={MIN_TIMEOUT_MS / 1000}
+            step="any"
           />
         </div>
       </div>
       <p className="-mt-3 text-xs text-slate-400 dark:text-slate-500">
-        Concurrency 1 sends pages one after another; up to 10 at once. Delay is the wait between requests on each lane.
+        Concurrency 1 sends pages one after another; up to 10 at once. Delay is the wait between requests on each lane. Set the
+        timeout below the endpoint's usual response time (e.g. 0.05) to test how timeouts are handled.
       </p>
 
       <div className="space-y-1.5 text-sm text-slate-700 dark:text-slate-300">

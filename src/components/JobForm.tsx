@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { createEmptyConfig, MIN_DELAY_MS } from '../lib/factory'
+import { createEmptyConfig, MIN_DELAY_MS, MIN_TIMEOUT_MS } from '../lib/factory'
 import { extractQueryParams, mergeQueryParams } from '../lib/queryParams'
 import { HTTP_METHODS } from '../lib/types'
 import type { BodyType, HttpMethod, RequestConfig } from '../lib/types'
@@ -49,7 +49,7 @@ export function JobForm({ initial, proxyConfigured, onSubmit, onCancel }: Props)
   function handleTimeoutChange(value: string) {
     setTimeoutSecondsInput(value)
     const n = Number(value)
-    if (!Number.isNaN(n) && n > 0) patch({ timeoutMs: Math.round(n * 1000) })
+    if (!Number.isNaN(n) && n > 0) patch({ timeoutMs: Math.max(MIN_TIMEOUT_MS, Math.round(n * 1000)) })
   }
 
   function handleRepeatCountChange(value: string) {
@@ -179,12 +179,15 @@ export function JobForm({ initial, proxyConfigured, onSubmit, onCancel }: Props)
           <label className={labelClass}>Timeout (seconds)</label>
           <input
             type="number"
-            min={1}
-            step={1}
+            min={MIN_TIMEOUT_MS / 1000}
+            step="any"
             value={timeoutSecondsInput}
             onChange={(e) => handleTimeoutChange(e.target.value)}
             className={`mt-1 ${inputClass}`}
           />
+          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+            Set below the endpoint's usual response time (e.g. 0.05) to test timeouts.
+          </p>
         </div>
       </div>
 

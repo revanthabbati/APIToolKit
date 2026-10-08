@@ -3,6 +3,8 @@ import type { KeyValue, RequestConfig } from './types'
 export const MIN_DELAY_MS = 200
 export const DEFAULT_DELAY_MS = 5000
 export const DEFAULT_TIMEOUT_MS = 10_000
+// Low enough to time out a fast real endpoint on purpose, for testing timeout handling.
+export const MIN_TIMEOUT_MS = 10
 export const DEFAULT_REPEAT_COUNT = 10
 
 export function createKeyValue(key = '', value = ''): KeyValue {
