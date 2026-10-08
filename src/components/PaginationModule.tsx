@@ -108,6 +108,9 @@ export function PaginationModule({ proxyUrl }: Props) {
             runError={runState.runError}
             runConfig={runState.runConfig}
             onRetryFailed={() => runState.retryFailed(proxy)}
+            exportFields={selected.exportFields ?? []}
+            exportDedupe={selected.exportDedupe ?? false}
+            onExportChange={(exportFields, exportDedupe) => update({ ...selected, exportFields, exportDedupe })}
           />
         </section>
       </div>

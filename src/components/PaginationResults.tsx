@@ -2,9 +2,11 @@ import { strToU8, zipSync } from 'fflate'
 import { useMemo, useState } from 'react'
 import type { PaginationRunStatus } from '../hooks/usePaginationRun'
 import { downloadBlob, downloadText } from '../lib/download'
+import type { ExportField } from '../lib/fieldExtract'
 import { formatBytes, formatDuration, prettyBody, statusBadgeClass, statusLabel } from '../lib/format'
 import { combinePages } from '../lib/paginationRunner'
 import type { PageResult, PaginationConfig } from '../lib/paginationTypes'
+import { FieldExtractor } from './FieldExtractor'
 import { PageDetail } from './PageDetail'
 
 interface Props {
@@ -15,16 +17,30 @@ interface Props {
   runError: string | null
   runConfig: PaginationConfig | null
   onRetryFailed: () => void
+  exportFields: ExportField[]
+  exportDedupe: boolean
+  onExportChange: (fields: ExportField[], dedupe: boolean) => void
 }
 
 const PREVIEW_CHARS = 300_000
-type View = 'combined' | 'individual'
+type View = 'combined' | 'individual' | 'export'
 
 function safeName(name: string) {
   return name.replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'endpoint'
 }
 
-export function PaginationResults({ status, pages, planned, stopReason, runError, runConfig, onRetryFailed }: Props) {
+export function PaginationResults({
+  status,
+  pages,
+  planned,
+  stopReason,
+  runError,
+  runConfig,
+  onRetryFailed,
+  exportFields,
+  exportDedupe,
+  onExportChange,
+}: Props) {
   const [view, setView] = useState<View>('combined')
   const [selected, setSelected] = useState<PageResult | null>(null)
 
@@ -33,6 +49,11 @@ export function PaginationResults({ status, pages, planned, stopReason, runError
     const data = combined.path !== null ? combined.records : pages.map((p) => p.json ?? p.bodyText)
     return JSON.stringify(data, null, 2)
   }, [combined, pages])
+  // Without a detectable records list, each successful JSON response is treated as one record.
+  const exportRecords = useMemo(
+    () => (combined.path !== null ? combined.records : pages.filter((p) => p.ok && p.json !== undefined).map((p) => p.json)),
+    [combined, pages],
+  )
 
   if (runError) {
     return <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">{runError}</div>
@@ -89,6 +110,9 @@ export function PaginationResults({ status, pages, planned, stopReason, runError
           <button type="button" className={tabClass('individual')} onClick={() => setView('individual')}>
             Individual ({pages.length})
           </button>
+          <button type="button" className={tabClass('export')} onClick={() => setView('export')}>
+            Custom export{exportFields.length > 0 ? ` (${exportFields.length})` : ''}
+          </button>
         </div>
         <div className="flex gap-1">
           {failedCount > 0 && status !== 'running' && (
@@ -115,7 +139,9 @@ export function PaginationResults({ status, pages, planned, stopReason, runError
         </div>
       </div>
 
-      {view === 'combined' ? (
+      {view === 'export' ? (
+        <FieldExtractor records={exportRecords} fields={exportFields} dedupe={exportDedupe} onChange={onExportChange} fileBaseName={baseName} />
+      ) : view === 'combined' ? (
         <div className="space-y-2">
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {combined.path !== null

@@ -34,6 +34,7 @@ Paste a cURL command (bash or Windows cmd format) or a URL, mark which query par
 - Concurrency (1–10), delay between requests, per-request timeout, max 1000 requests per run.
 - Stops early when a page comes back with no records, or optionally on the first failure; **Retry failed** re-sends only the requests that failed.
 - Results two ways: **Combined** merges the records from every page into one list (the records array is auto-detected, e.g. `eld_devices` or `data.items`, or set it explicitly), and **Individual** shows each response on its own. Download either as JSON, or all pages as a ZIP.
+- **Custom export**: pick just the fields you need from the merged records — nested ones too, like `eld_device.vehicle.number` — rename and reorder them, optionally drop duplicate rows, preview, and download as JSON or CSV. The selection is saved with the endpoint, so reruns export the same fields.
 
 ## Samsung Import Builder
 

@@ -1,3 +1,4 @@
+import type { ExportField } from './fieldExtract'
 import type { HttpMethod, KeyValue } from './types'
 
 export interface PaginationConfig {
@@ -18,6 +19,9 @@ export interface PaginationConfig {
   stopOnError: boolean
   recordsPath: string
   useProxy: boolean
+  // Optional so endpoints saved before custom export existed still load.
+  exportFields?: ExportField[]
+  exportDedupe?: boolean
 }
 
 export interface PageResult {
