@@ -1,5 +1,6 @@
 import { usePaginationConfigs } from '../hooks/usePaginationConfigs'
 import { usePaginationRun } from '../hooks/usePaginationRun'
+import { PageHeader } from './PageHeader'
 import { PaginationEditor } from './PaginationEditor'
 import { PaginationResults } from './PaginationResults'
 
@@ -20,6 +21,11 @@ export function PaginationModule({ proxyUrl }: Props) {
   }
 
   return (
+    <>
+    <PageHeader
+      title="Pagination Runner"
+      description="Import a cURL command or URL, choose which parameters to iterate, and walk through every page — results merged into one response or viewed page by page."
+    />
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="space-y-2">
         <div className="flex items-center justify-between">
@@ -106,5 +112,6 @@ export function PaginationModule({ proxyUrl }: Props) {
         </section>
       </div>
     </div>
+    </>
   )
 }

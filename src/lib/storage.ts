@@ -89,10 +89,14 @@ export function saveSamsungConfig(config: SamsungRunConfig): void {
 
 export type ActiveModule = 'requests' | 'pagination' | 'samsung'
 
+export function isActiveModule(value: unknown): value is ActiveModule {
+  return value === 'requests' || value === 'pagination' || value === 'samsung'
+}
+
 export function loadActiveModule(): ActiveModule {
   try {
     const raw = localStorage.getItem(ACTIVE_MODULE_KEY)
-    return raw === 'samsung' || raw === 'pagination' ? raw : 'requests'
+    return isActiveModule(raw) ? raw : 'requests'
   } catch {
     return 'requests'
   }
